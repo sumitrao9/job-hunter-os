@@ -1,0 +1,81 @@
+[PYI-39825:DEBUG] PyInstaller Bootloader 6.x
+[PYI-39825:DEBUG] LOADER: argv[0]: /Users/macbook/Desktop/SUMIT/job-hunter-os/backend/dist/NS/ns
+[PYI-39825:DEBUG] LOADER: argv[1]: --port
+[PYI-39825:DEBUG] LOADER: argv[2]: 8000
+[PYI-39825:DEBUG] LOADER: executable file: /Users/macbook/Desktop/SUMIT/job-hunter-os/backend/dist/NS/ns
+[PYI-39825:DEBUG] LOADER: trying to load executable-embedded archive...
+[PYI-39825:DEBUG] LOADER: attempting to open archive /Users/macbook/Desktop/SUMIT/job-hunter-os/backend/dist/NS/ns
+[PYI-39825:DEBUG] LOADER: cookie found at offset 0x3179D14
+[PYI-39825:DEBUG] LOADER: archive file: /Users/macbook/Desktop/SUMIT/job-hunter-os/backend/dist/NS/ns
+[PYI-39825:DEBUG] LOADER: application has onedir semantics...
+[PYI-39825:DEBUG] LOADER: _PYI_ARCHIVE_FILE not defined...
+[PYI-39825:DEBUG] LOADER: parent process level = -2
+[PYI-39825:DEBUG] LOADER: process level = 1
+[PYI-39825:DEBUG] LOADER: application's top-level directory: /Users/macbook/Desktop/SUMIT/job-hunter-os/backend/dist/NS/_internal
+[PYI-39825:DEBUG] LOADER: splash screen is unavailable.
+[PYI-39825:DEBUG] DYLIB: loading Python shared library: /Users/macbook/Desktop/SUMIT/job-hunter-os/backend/dist/NS/_internal/Python
+[PYI-39825:DEBUG] DYLIB: loaded Python shared library.
+[PYI-39825:DEBUG] DYLIB: imported symbols from Python shared library.
+[PYI-39825:DEBUG] LOADER: pre-initializing embedded python interpreter...
+[PYI-39825:DEBUG] LOADER: using PEP-741 API...
+[PYI-39825:DEBUG] LOADER: creating PyInitConfig structure...
+[PYI-39825:DEBUG] LOADER: setting program name...
+[PYI-39825:DEBUG] LOADER: setting python home path...
+[PYI-39825:DEBUG] LOADER: setting module search paths...
+[PYI-39825:DEBUG] LOADER: setting sys.argv...
+[PYI-39825:DEBUG] LOADER: applying run-time options...
+[PYI-39825:DEBUG] LOADER: starting embedded python interpreter...
+[PYI-39825:DEBUG] LOADER: setting sys._MEIPASS
+[PYI-39825:DEBUG] LOADER: importing modules from PKG/CArchive
+[PYI-39825:DEBUG] LOADER: extracted struct
+[PYI-39825:DEBUG] LOADER: running unmarshalled code object for module struct...
+[PYI-39825:DEBUG] LOADER: extracted pyimod01_archive
+[PYI-39825:DEBUG] LOADER: running unmarshalled code object for module pyimod01_archive...
+[PYI-39825:DEBUG] LOADER: extracted pyimod02_importers
+[PYI-39825:DEBUG] LOADER: running unmarshalled code object for module pyimod02_importers...
+[PYI-39825:DEBUG] LOADER: extracted pyimod03_ctypes
+[PYI-39825:DEBUG] LOADER: running unmarshalled code object for module pyimod03_ctypes...
+[PYI-39825:DEBUG] LOADER: looking for PYZ archive TOC entry...
+[PYI-39825:DEBUG] LOADER: path to PYZ archive stored into sys._pyinstaller_pyz...
+[PYI-39825:DEBUG] LOADER: running pyiboot01_bootstrap.py
+[PYI-39825:DEBUG] LOADER: running pyi_rth_inspect.py
+[PYI-39825:DEBUG] LOADER: running pyi_rth_pkgutil.py
+[PYI-39825:DEBUG] LOADER: running pyi_rth_setuptools.py
+[PYI-39825:DEBUG] LOADER: running pyi_rth_cryptography_openssl.py
+[PYI-39825:DEBUG] LOADER: running pyi_rth_multiprocessing.py
+[PYI-39825:DEBUG] LOADER: running main.py
+INFO:     Started server process [39825]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:58152 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58153 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58153 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58154 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58154 - "GET /assets/index-DDYdsGk5.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58155 - "GET /assets/index-kxsWwxSi.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58154 - "GET /api/profile/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58156 - "GET /api/applications/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58154 - "GET /api/profile/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58157 - "GET /api/health/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58155 - "GET /api/jobs/?limit=20 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58168 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58169 - "GET /jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58170 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58171 - "GET /jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58172 - "GET /applications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58173 - "GET /follow-ups HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58174 - "GET /cover-letter HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58175 - "GET /apply HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58176 - "GET /resumes HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58177 - "GET /settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58178 - "GET /profile HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58179 - "GET /api/profile/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58180 - "GET /api/jobs/?limit=5 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58181 - "GET /api/health/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58184 - "POST /api/cover-letter/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58185 - "POST /api/backup/create HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [39825]

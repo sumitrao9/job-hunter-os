@@ -1,0 +1,37 @@
+services:
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - job_hunter_data:/app/data
+    environment:
+      - DATABASE_URL=sqlite:///./data/job_hunter.db
+      - CORS_ORIGINS=http://localhost:5173
+      - UPLOAD_DIR=/app/data/uploads
+      - APP_ENV=development
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_USER=admin
+      - N8N_PASSWORD=admin
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+volumes:
+  job_hunter_data:
+  n8n_data:

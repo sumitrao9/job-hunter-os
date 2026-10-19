@@ -1,0 +1,214 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --canvas: 243 246 249;
+    --surface: 255 255 255;
+    --surface-raised: 255 255 255;
+    --surface-sunken: 244 247 250;
+    --surface-overlay: 255 255 255;
+    --line: 226 232 239;
+    --line-strong: 199 208 219;
+    --fg: 15 23 33;
+    --fg-muted: 71 85 101;
+    --fg-subtle: 129 143 159;
+    --accent: 16 138 74;
+    --accent-hover: 15 118 63;
+    --accent-soft: 221 244 230;
+    --accent-fg: 255 255 255;
+    --accent-glow: 22 163 74;
+    --danger: 190 32 42;
+    --danger-soft: 254 226 227;
+    --warn: 170 105 10;
+    --warn-soft: 253 242 200;
+    --info: 30 82 224;
+    --info-soft: 219 233 254;
+    --ambient-a: 16 185 129;
+    --ambient-b: 59 130 246;
+
+    --shadow-xs: 0 1px 2px 0 rgb(15 23 33 / 0.05);
+    --shadow-sm: 0 1px 3px 0 rgb(15 23 33 / 0.07), 0 1px 2px -1px rgb(15 23 33 / 0.05);
+    --shadow-md: 0 4px 12px -2px rgb(15 23 33 / 0.09), 0 2px 4px -2px rgb(15 23 33 / 0.05);
+    --shadow-lg: 0 16px 40px -8px rgb(15 23 33 / 0.16), 0 4px 10px -4px rgb(15 23 33 / 0.07);
+    --shadow-glow: 0 0 0 1px rgb(var(--accent) / 0.16), 0 6px 20px -8px rgb(var(--accent) / 0.34);
+    color-scheme: light;
+  }
+
+  html.dark {
+    /* Graphite dark theme: canvas #0d0f12, sidebar #111318, elevated #171a20,
+       borders #292d35, emerald accent #22c55e. */
+    --canvas: 13 15 18;
+    --surface: 17 19 24;
+    --surface-raised: 23 26 32;
+    --surface-sunken: 10 12 15;
+    --surface-overlay: 26 30 37;
+    --line: 41 45 53;
+    --line-strong: 62 68 79;
+    --fg: 244 246 248;
+    --fg-muted: 156 163 175;
+    --fg-subtle: 110 118 129;
+    --accent: 34 197 94;
+    --accent-hover: 22 163 74;
+    --accent-soft: 20 45 31;
+    --accent-fg: 4 20 11;
+    --accent-glow: 34 197 94;
+    --danger: 248 113 113;
+    --danger-soft: 60 24 27;
+    --warn: 234 179 8;
+    --warn-soft: 56 44 10;
+    --info: 96 165 250;
+    --info-soft: 20 37 63;
+    --ambient-a: 34 197 94;
+    --ambient-b: 99 102 241;
+
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 8px 20px -6px rgb(0 0 0 / 0.6), 0 2px 6px -2px rgb(0 0 0 / 0.4);
+    --shadow-lg: 0 24px 56px -14px rgb(0 0 0 / 0.75), 0 8px 18px -8px rgb(0 0 0 / 0.5);
+    --shadow-glow: 0 0 0 1px rgb(var(--accent) / 0.24), 0 8px 24px -10px rgb(var(--accent) / 0.4);
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-canvas text-fg antialiased;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  *,
+  *::before,
+  *::after {
+    @apply border-line;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-accent/60 ring-offset-2 ring-offset-canvas;
+  }
+
+  ::selection {
+    background: rgb(var(--accent) / 0.26);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full border-[3px] border-solid border-transparent bg-line-strong bg-clip-content;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-fg-subtle bg-clip-content;
+  }
+
+  input[type='date']::-webkit-calendar-picker-indicator {
+    @apply cursor-pointer opacity-50 transition-opacity hover:opacity-90;
+  }
+
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+@layer components {
+  /* Ambient light so large empty areas do not read as flat panels. */
+  .ambient-canvas {
+    position: relative;
+    isolation: isolate;
+  }
+  .ambient-canvas::before {
+    content: '';
+    position: fixed;
+    inset: -20%;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(38rem 38rem at 12% -8%, rgb(var(--ambient-a) / 0.09), transparent 60%),
+      radial-gradient(34rem 34rem at 88% 4%, rgb(var(--ambient-b) / 0.09), transparent 62%);
+    animation: drift 22s ease-in-out infinite;
+  }
+  html:not(.dark) .ambient-canvas::before {
+    background:
+      radial-gradient(38rem 38rem at 12% -8%, rgb(var(--ambient-a) / 0.11), transparent 60%),
+      radial-gradient(34rem 34rem at 88% 4%, rgb(var(--ambient-b) / 0.08), transparent 62%);
+  }
+
+  .skeleton {
+    @apply relative overflow-hidden rounded-md bg-surface-sunken;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full;
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      rgb(var(--fg-subtle) / 0.14),
+      transparent
+    );
+    animation: shimmer 1.8s infinite;
+  }
+
+  /* Hairline gradient border for cards that should feel premium. */
+  .ring-gradient {
+    position: relative;
+  }
+  .ring-gradient::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      160deg,
+      rgb(var(--accent) / 0.45),
+      transparent 38%,
+      transparent 62%,
+      rgb(var(--info) / 0.28)
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+  }
+  .ring-gradient:hover::before,
+  .ring-gradient:focus-within::before {
+    opacity: 1;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hairline-top {
+    box-shadow: inset 0 1px 0 0 rgb(var(--fg) / 0.05);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .ambient-canvas::before {
+    animation: none;
+  }
+}

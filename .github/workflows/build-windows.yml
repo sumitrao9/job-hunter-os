@@ -1,0 +1,52 @@
+name: build-windows
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-windows:
+    # A real Windows runner: the Python backend has to be frozen with PyInstaller
+    # under Windows Python, and PyInstaller cannot cross-compile.
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Report versions
+        shell: cmd
+        run: |
+          node --version
+          npm --version
+          python --version
+
+      # Does everything: venv + pip, npm ci, vite build, PyInstaller,
+      # electron-builder (nsis + portable), artifact collection.
+      - name: Build Windows installer and portable exe
+        shell: cmd
+        run: backend\packaging\build-windows.bat
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: job-hunter-os-windows
+          path: |
+            frontend/dist-electron/*.exe
+            release/windows/*.exe
+          if-no-files-found: error
+          retention-days: 30

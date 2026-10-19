@@ -1,0 +1,54 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Build outputs
+dist
+build
+.next
+out
+
+# Python
+.venv
+__pycache__
+*.pyc
+*.pyo
+.env
+.env.local
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# Data
+data/*
+!data/.gitkeep
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Backups
+*.zip
+
+# Electron build artifacts
+dist-electron/
+*.asar
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Generated screenshots
+shots/
