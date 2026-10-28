@@ -1,6 +1,6 @@
 import re
-from typing import Dict, List
-from app.models import Profile, Job, Application
+
+from app.models import Application, Job, Profile
 
 # Words that carry no signal when matching skills to a posting.
 STOPWORDS = {
@@ -13,13 +13,13 @@ STOPWORDS = {
 }
 
 
-def _tokens(text: str) -> List[str]:
+def _tokens(text: str) -> list[str]:
     if not text:
         return []
     return [t for t in re.split(r"[^a-z0-9+#.]+", text.lower()) if t and len(t) > 1]
 
 
-def relevant_skills(profile: Profile, job: Job, limit: int = 5) -> List[str]:
+def relevant_skills(profile: Profile, job: Job, limit: int = 5) -> list[str]:
     """Pick the candidate's real skills that actually overlap the posting.
 
     Returns only skills the user listed on their profile. Nothing is invented.
@@ -45,9 +45,9 @@ def relevant_skills(profile: Profile, job: Job, limit: int = 5) -> List[str]:
     return [skill for _, skill in scored[:limit]]
 
 
-def _experience_lines(profile: Profile, limit: int = 2) -> List[str]:
+def _experience_lines(profile: Profile, limit: int = 2) -> list[str]:
     """Render real experience entries as short bullet sentences."""
-    lines: List[str] = []
+    lines: list[str] = []
     for entry in (profile.experience or [])[:limit]:
         if not isinstance(entry, dict):
             continue
@@ -66,7 +66,7 @@ def _experience_lines(profile: Profile, limit: int = 2) -> List[str]:
     return lines
 
 
-def prepare_application(profile: Profile, job: Job) -> Dict:
+def prepare_application(profile: Profile, job: Job) -> dict:
     """Build a cover letter and form answers from real profile data only.
 
     Nothing is fabricated: every claim traces back to a field the user entered.

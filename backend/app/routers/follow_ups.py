@@ -1,9 +1,11 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
+
 from app.database import get_db
 from app.models import Application
-from pydantic import BaseModel
-from datetime import datetime
 
 router = APIRouter(prefix="/api/follow-ups", tags=["follow-ups"])
 

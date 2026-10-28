@@ -1,13 +1,15 @@
+import os
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from app.database import get_db
-from app.models import Profile, Job, Application, Resume, TailoredResume
-from app.services.llm import LLMService
-from app.services.matching import score_job_against_profile, score_ats_compatibility
+
 from app.config import settings
-import os
-import uuid
+from app.database import get_db
+from app.models import Job, Profile, Resume, TailoredResume
+from app.services.llm import LLMService
+from app.services.matching import score_ats_compatibility, score_job_against_profile
 
 router = APIRouter(prefix="/api/ai", tags=["ai"])
 

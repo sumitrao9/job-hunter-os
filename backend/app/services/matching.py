@@ -9,12 +9,11 @@ produces nonsense: "go" matches "google", "r" matches "react".
 """
 import re
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set
 
-from app.models import Profile, Job
+from app.models import Job, Profile
 
 # Words that carry no signal when comparing a skill to a posting.
-STOPWORDS: Set[str] = {
+STOPWORDS: set[str] = {
     "a", "an", "and", "any", "are", "as", "at", "be", "been", "but", "by", "can",
     "could", "do", "does", "for", "from", "has", "have", "how", "in", "into", "is",
     "it", "its", "may", "more", "must", "new", "no", "not", "of", "on", "or",
@@ -25,7 +24,7 @@ STOPWORDS: Set[str] = {
     "whom", "why", "will", "with", "would", "you", "your", "role", "roles", "job",
     "jobs", "work", "working", "years", "year", "experience", "team", "teams",
     "company", "candidate", "candidates", "ability", "strong", "good", "great",
-    "plus", "well", "also", "help", "helps", "across", "about", "people",
+    "plus", "also", "help", "helps", "across", "about", "people",
 }
 
 # Remote signals used to infer the remote flag from free-text locations.
@@ -58,11 +57,11 @@ FRAMEWORK_CONFLICT_PENALTY = 20
 @dataclass
 class MatchResult:
     score: float
-    evidence: List[str] = field(default_factory=list)
-    gaps: List[str] = field(default_factory=list)
-    components: Dict[str, float] = field(default_factory=dict)
+    evidence: list[str] = field(default_factory=list)
+    gaps: list[str] = field(default_factory=list)
+    components: dict[str, float] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "score": self.score,
             "evidence": self.evidence,
@@ -85,7 +84,7 @@ def _has_sklearn() -> bool:
     return _HAS_SKLEARN
 
 
-def tokenize(text: Optional[str]) -> List[str]:
+def tokenize(text: str | None) -> list[str]:
     """Lowercase word tokens, keeping + and . so c++ and node.js survive."""
     if not text:
         return []
@@ -93,7 +92,7 @@ def tokenize(text: Optional[str]) -> List[str]:
     return [t for t in raw if t and len(t) > 1]
 
 
-def content_tokens(text: Optional[str]) -> Set[str]:
+def content_tokens(text: str | None) -> set[str]:
     return {t for t in tokenize(text) if t not in STOPWORDS}
 
 
@@ -101,18 +100,18 @@ def normalize_skill(skill: str) -> str:
     return skill.strip().lower()
 
 
-def _skill_tokens(skill: str) -> Set[str]:
+def _skill_tokens(skill: str) -> set[str]:
     """Tokens for a skill, splitting multi-word skills into their parts."""
     return {t for t in tokenize(skill) if t not in STOPWORDS}
 
 
-def matched_skills(skills: List[str], haystack: Set[str]) -> List[str]:
+def matched_skills(skills: list[str], haystack: set[str]) -> list[str]:
     """Return the skills genuinely present in the posting.
 
     A skill counts when all of its significant tokens appear, so "React" needs
     "react" and "Node.js" needs "node". Partial overlap does not count.
     """
-    hits: List[str] = []
+    hits: list[str] = []
     for skill in skills:
         tokens = _skill_tokens(skill)
         if tokens and tokens <= haystack:
@@ -128,7 +127,7 @@ def _infer_remote(job: Job) -> bool:
     return any(token in text for token in REMOTE_TOKENS)
 
 
-def _implied_seniority(text: str) -> Optional[str]:
+def _implied_seniority(text: str) -> str | None:
     tokens = set(tokenize(text))
     for level in reversed(SENIORITY_ORDER):
         if level in tokens:
@@ -136,13 +135,13 @@ def _implied_seniority(text: str) -> Optional[str]:
     return None
 
 
-def framework_conflict(profile_skills: List[str], job: Job) -> Optional[str]:
+def framework_conflict(profile_skills: list[str], job: Job) -> str | None:
     """Return the competing framework a posting leads with that the user lacks.
 
     Uses the job title, because a posting titled "(Vue)" is a strong signal that
     the stack is Vue even when the body happens to mention React once.
     """
-    owned: Set[str] = set()
+    owned: set[str] = set()
     for skill in profile_skills:
         tokens = _skill_tokens(skill)
         for family, (_label, variants) in FRONTEND_FRAMEWORKS.items():
@@ -322,14 +321,14 @@ class ATSScore:
     keyword_match: float
     section_score: float
     format_score: float
-    missing_keywords: List[str]
-    recommendations: List[str]
+    missing_keywords: list[str]
+    recommendations: list[str]
 
 
 def score_ats_compatibility(
     resume_text: str,
     job_description: str,
-    profile_skills: Optional[List[str]] = None,
+    profile_skills: list[str] | None = None,
 ) -> ATSScore:
     """Score how ATS-friendly a resume is for a given job description.
 

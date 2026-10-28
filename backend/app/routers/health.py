@@ -1,13 +1,17 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import Any, Dict, List, Optional
-from app.database import get_db, engine, Base
-from app.config import settings
-from app.models import JobSource, Profile, Application
-from app.routers.discovery import DEFAULT_SOURCES
+from __future__ import annotations
+
+import logging
 import os
 import sys
-import logging
+
+from fastapi import APIRouter
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
+from app.config import settings
+from app.database import Base, engine, get_db
+from app.models import JobSource, Profile
+from app.routers.discovery import DEFAULT_SOURCES
 
 router = APIRouter(prefix="/api/health", tags=["health"])
 
@@ -15,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 # Maps internal status strings to human-readable labels.
-STATUS_LABELS: Dict[str, str] = {
+STATUS_LABELS: dict[str, str] = {
     "discovered": "New job found",
     "shortlisted": "Worth reviewing",
     "preparing": "Preparing your application",
@@ -30,7 +34,7 @@ STATUS_LABELS: Dict[str, str] = {
     "error": "Something went wrong",
 }
 
-STATUS_TONES: Dict[str, str] = {
+STATUS_TONES: dict[str, str] = {
     "discovered": "info",
     "shortlisted": "accent",
     "preparing": "info",
@@ -60,7 +64,7 @@ class ComponentStatus(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str
-    components: List[ComponentStatus]
+    components: list[ComponentStatus]
     timestamp: str
     version: str
 
@@ -74,7 +78,7 @@ def _check_database() -> ComponentStatus:
             status="ready",
             message="Your data is saved locally and ready to use.",
         )
-    except Exception as exc:
+    except Exception:
         return ComponentStatus(
             name="Database",
             status="error",
@@ -140,7 +144,6 @@ def _check_job_sources(db: Session) -> ComponentStatus:
                 message="No job sources are configured yet. The first-run setup will help you choose.",
             )
         healthy = [s for s in sources if s.health_status == "HEALTHY"]
-        not_configured = [s for s in sources if s.health_status == "NOT_CONFIGURED"]
         if len(healthy) == len(sources):
             return ComponentStatus(
                 name="Job Sources",
@@ -168,7 +171,6 @@ def _check_job_sources(db: Session) -> ComponentStatus:
 
 def _check_database_migration() -> ComponentStatus:
     try:
-        from app.models import Profile
         with engine.connect() as conn:
             conn.exec_driver_sql("SELECT 1 FROM profiles LIMIT 1")
         return ComponentStatus(
@@ -273,6 +275,7 @@ def detailed_health():
     Returns simple, user-friendly status for each component.
     """
     from datetime import datetime
+
     from app.database import SessionLocal
 
     db = SessionLocal()
@@ -293,9 +296,7 @@ def detailed_health():
         db.close()
 
     statuses = [c.status for c in components]
-    if "error" in statuses:
-        overall = "warning"
-    elif "warning" in statuses:
+    if "error" in statuses or "warning" in statuses:
         overall = "warning"
     else:
         overall = "ready"
@@ -319,7 +320,7 @@ def check_and_repair():
 
     Returns a list of actions taken.
     """
-    actions: List[str] = []
+    actions: list[str] = []
 
     # Ensure database tables exist.
     try:

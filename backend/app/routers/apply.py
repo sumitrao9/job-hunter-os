@@ -1,19 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from app.database import get_db
-from app.models import Profile, Job, Application
-from app.services.application_prep import prepare_application, generate_follow_up_message
-from pydantic import BaseModel
-from typing import Optional
 import uuid
 from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.models import Application, Job, Profile
+from app.services.application_prep import generate_follow_up_message, prepare_application
 
 router = APIRouter(prefix="/api/apply", tags=["apply"])
 
 
 class PrepareRequest(BaseModel):
-    job_id: Optional[str] = None
-    application_id: Optional[str] = None
+    job_id: str | None = None
+    application_id: str | None = None
 
 
 class FollowUpRequest(BaseModel):

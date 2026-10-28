@@ -1,6 +1,5 @@
-import sys
 import os
-import pytest
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
@@ -230,7 +229,14 @@ def test_himalayas_adapter_handles_no_network(client):
 
 
 def test_all_new_adapters_routed(client):
-    from app.services.multi_discovery import _discover_adzuna, _discover_remotive, _discover_jsearch, _discover_usajobs, _discover_remoteok, _discover_himalayas
+    from app.services.multi_discovery import (
+        _discover_adzuna,
+        _discover_himalayas,
+        _discover_jsearch,
+        _discover_remoteok,
+        _discover_remotive,
+        _discover_usajobs,
+    )
     adapters = [_discover_adzuna, _discover_remotive, _discover_jsearch, _discover_usajobs, _discover_remoteok, _discover_himalayas]
     for adapter_fn in adapters:
         result = adapter_fn({"source_name": "test", "adapter": "test", "config": {"queries": [{"search_term": "x"}]}})

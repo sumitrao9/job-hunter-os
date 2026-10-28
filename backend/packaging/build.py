@@ -13,10 +13,10 @@ This script:
     4. Copies the database and uploads to the dist folder
 """
 import os
-import sys
 import platform
-import subprocess
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -127,7 +127,7 @@ def finalize():
         launcher = dist_dir / "run.bat"
         launcher.write_text(
             "@echo off\n"
-            f"cd /d \"%~dp0\"\n"
+            "cd /d \"%~dp0\"\n"
             "ns.exe --port 8000\n"
         )
 

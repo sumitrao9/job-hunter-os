@@ -1,4 +1,3 @@
-from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -14,8 +13,8 @@ router = APIRouter(prefix="/api/matching", tags=["matching"])
 class ScoreResponse(BaseModel):
     job_id: str
     score: float
-    evidence: List[str]
-    gaps: List[str]
+    evidence: list[str]
+    gaps: list[str]
     components: dict
 
 

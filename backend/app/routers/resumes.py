@@ -1,32 +1,33 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, File, UploadFile, Form
-from sqlalchemy.orm import Session
-from typing import Optional, List
-from app.database import get_db
-from app.models import Profile, Resume, Job, Application, AgentLog, WorkflowConfig
-from pydantic import BaseModel, ConfigDict
-from datetime import datetime
 import os
 import uuid
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from pydantic import BaseModel, ConfigDict
+from sqlalchemy.orm import Session
+
 from app.config import settings
+from app.database import get_db
+from app.models import Resume
 
 router = APIRouter(prefix="/api/resumes", tags=["resumes"])
 
 
 class ResumeSchema(BaseModel):
-    id: Optional[str] = None
-    profile_id: Optional[str] = None
+    id: str | None = None
+    profile_id: str | None = None
     title: str
     original_filename: str
     file_type: str
     is_default: bool = False
-    parsed_sections: Optional[dict] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    parsed_sections: dict | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
-@router.get("/", response_model=List[ResumeSchema])
+@router.get("/", response_model=list[ResumeSchema])
 def list_resumes(db: Session = Depends(get_db)):
     return db.query(Resume).all()
 

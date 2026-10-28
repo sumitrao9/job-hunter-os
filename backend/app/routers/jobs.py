@@ -1,49 +1,50 @@
 import uuid
-from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlalchemy.orm import Session
-from typing import Optional, List
+from datetime import datetime
 from urllib.parse import urlparse
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, ConfigDict
+from sqlalchemy.orm import Session
+
 from app.database import get_db
 from app.models import Job
-from pydantic import BaseModel, ConfigDict
-from datetime import datetime
 
 router = APIRouter(prefix="/api/jobs", tags=["jobs"])
 
 
 class JobSchema(BaseModel):
-    id: Optional[str] = None
-    title: Optional[str] = None
-    company: Optional[str] = None
-    location: Optional[str] = None
-    remote: Optional[bool] = None
-    salary_min: Optional[int] = None
-    salary_max: Optional[int] = None
-    description: Optional[str] = None
-    url: Optional[str] = None
-    source: Optional[str] = None
-    match_score: Optional[float] = None
+    id: str | None = None
+    title: str | None = None
+    company: str | None = None
+    location: str | None = None
+    remote: bool | None = None
+    salary_min: int | None = None
+    salary_max: int | None = None
+    description: str | None = None
+    url: str | None = None
+    source: str | None = None
+    match_score: float | None = None
     # Stored as a list of human-readable reasons, so the type must be a list.
-    match_evidence: Optional[List[str]] = None
-    status: Optional[str] = None
-    is_saved: Optional[bool] = None
-    is_duplicate: Optional[bool] = None
-    scraped_at: Optional[datetime] = None
-    created_at: Optional[datetime] = None
+    match_evidence: list[str] | None = None
+    status: str | None = None
+    is_saved: bool | None = None
+    is_duplicate: bool | None = None
+    scraped_at: datetime | None = None
+    created_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
-@router.get("/", response_model=List[JobSchema])
+@router.get("/", response_model=list[JobSchema])
 def list_jobs(
     db: Session = Depends(get_db),
-    search: Optional[str] = Query(None),
-    source: Optional[str] = Query(None),
-    company: Optional[str] = Query(None),
-    status: Optional[str] = Query(None),
-    saved: Optional[bool] = Query(None),
-    remote: Optional[bool] = Query(None),
-    min_score: Optional[float] = Query(None, ge=0, le=100),
+    search: str | None = Query(None),
+    source: str | None = Query(None),
+    company: str | None = Query(None),
+    status: str | None = Query(None),
+    saved: bool | None = Query(None),
+    remote: bool | None = Query(None),
+    min_score: float | None = Query(None, ge=0, le=100),
     sort: str = Query("recent", pattern="^(recent|match|salary|company|title)$"),
     skip: int = 0,
     limit: int = 50,
@@ -91,13 +92,13 @@ def list_jobs(
 @router.get("/count")
 def count_jobs(
     db: Session = Depends(get_db),
-    search: Optional[str] = Query(None),
-    company: Optional[str] = Query(None),
-    source: Optional[str] = Query(None),
-    status: Optional[str] = Query(None),
-    saved: Optional[bool] = Query(None),
-    remote: Optional[bool] = Query(None),
-    min_score: Optional[float] = Query(None, ge=0, le=100),
+    search: str | None = Query(None),
+    company: str | None = Query(None),
+    source: str | None = Query(None),
+    status: str | None = Query(None),
+    saved: bool | None = Query(None),
+    remote: bool | None = Query(None),
+    min_score: float | None = Query(None, ge=0, le=100),
 ):
     """Total matches for the active filters, so the UI can paginate honestly."""
     q = db.query(Job)
@@ -126,8 +127,8 @@ def count_jobs(
 
 
 class JobUpdate(BaseModel):
-    is_saved: Optional[bool] = None
-    status: Optional[str] = None
+    is_saved: bool | None = None
+    status: str | None = None
 
 
 @router.patch("/{job_id}", response_model=JobSchema)
@@ -145,7 +146,7 @@ def update_job(job_id: str, update: JobUpdate, db: Session = Depends(get_db)):
     return JobSchema.model_validate(job)
 
 
-@router.get("/companies", response_model=List[str])
+@router.get("/companies", response_model=list[str])
 def list_companies(db: Session = Depends(get_db)):
     """Distinct companies so the UI filter is not limited to the current page."""
     rows = db.query(Job.company).filter(Job.company.isnot(None)).distinct().all()

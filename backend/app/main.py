@@ -1,13 +1,33 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-from app.database import engine, Base
-from app.config import settings
-from app.models import JobSource, SourceRun, JobSourceMapping, SchedulerConfig, SearchProfile
-from app.routers import profile, resumes, jobs, applications, dashboard, settings_api, matching, onboarding, discovery, cover_letter, follow_ups, export as export_router, apply, ai, auto_apply, multi_discovery, health as health_router, backup
 import os
 import sys
+
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
+from app.config import settings
+from app.database import Base, engine
+from app.routers import (
+    ai,
+    applications,
+    apply,
+    auto_apply,
+    backup,
+    cover_letter,
+    dashboard,
+    discovery,
+    follow_ups,
+    jobs,
+    matching,
+    multi_discovery,
+    onboarding,
+    profile,
+    resumes,
+    settings_api,
+)
+from app.routers import export as export_router
+from app.routers import health as health_router
 
 
 def _frontend_dist_path() -> str:
@@ -77,6 +97,7 @@ app.include_router(backup.router)
 
 # Run self-healing checks at startup.
 from app.routers.health import check_and_repair
+
 check_and_repair()
 
 

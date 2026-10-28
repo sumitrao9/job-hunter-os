@@ -1,9 +1,11 @@
-from sqlalchemy import Column, String, Float, Integer, Boolean, DateTime, Text, ForeignKey
+import uuid
+from datetime import datetime
+
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.sqlite import JSON
 from sqlalchemy.orm import relationship
-from datetime import datetime
+
 from app.database import Base
-import uuid
 
 
 class Profile(Base):

@@ -7,23 +7,25 @@ Runs queries in parallel, normalizes data, aggressively deduplicates, and stores
 """
 import concurrent.futures
 import hashlib
-import json
 import re
-import time
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 from html import unescape
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import feedparser
 import pandas as pd
 import requests
-from sqlalchemy.orm import Session
 
-from app.database import SessionLocal
 from app.config import settings
-from app.models import Job, Profile
-from app.models import JobSource, SourceRun, JobSourceMapping, SchedulerConfig, SearchProfile
+from app.database import SessionLocal
+from app.models import (
+    Job,
+    JobSource,
+    JobSourceMapping,
+    Profile,
+    SourceRun,
+)
 from app.services.matching import score_job_against_profile
 
 # --------------- normalization helpers ---------------
@@ -38,7 +40,7 @@ def _clean_text(value: Any) -> str:
     return text.strip()
 
 
-def _normalize_url(url: Optional[str]) -> str:
+def _normalize_url(url: str | None) -> str:
     if not url:
         return ""
     url = url.strip()
@@ -64,7 +66,7 @@ def _fingerprint(title: str, company: str, location: str, description: str) -> s
 
 # --------------- adapter helpers ---------------
 
-def _discover_jobspy(source: Dict) -> List[Dict]:
+def _discover_jobspy(source: dict) -> list[dict]:
     """Run JobSpy for LinkedIn/Indeed/Naukri/Glassdoor/ZipRecruiter/Google/Bayt/BDJobs."""
     queries = source.get("config", {}).get("queries", [])
     if not queries:
@@ -117,7 +119,7 @@ def _discover_jobspy(source: Dict) -> List[Dict]:
     return results
 
 
-def _jobspy_scrape(sites: List[str], search_term: str, location: str, source: Dict) -> Optional[pd.DataFrame]:
+def _jobspy_scrape(sites: list[str], search_term: str, location: str, source: dict) -> pd.DataFrame | None:
     from jobspy import scrape_jobs
     config = source.get("config", {})
     results_wanted = config.get("results_wanted", 20)
@@ -136,7 +138,7 @@ def _jobspy_scrape(sites: List[str], search_term: str, location: str, source: Di
     )
 
 
-def _discover_ats(source: Dict) -> List[Dict]:
+def _discover_ats(source: dict) -> list[dict]:
     """Greenhouse / Lever / Ashby public board."""
     url = source.get("base_url") or source.get("url")
     if not url:
@@ -151,7 +153,7 @@ def _discover_ats(source: Dict) -> List[Dict]:
         print(f"[ats] {source['source_name']} fetch failed: {exc}")
         return []
 
-    items: List[Dict] = []
+    items: list[dict] = []
     if kind == "greenhouse":
         for job in data.get("jobs", []):
             loc = _clean_text(job.get("location") or "").strip()
@@ -209,13 +211,13 @@ def _discover_ats(source: Dict) -> List[Dict]:
     return items
 
 
-def _discover_rss(source: Dict) -> List[Dict]:
+def _discover_rss(source: dict) -> list[dict]:
     """Parse RSS/Atom feeds for job listings."""
     feed_urls = source.get("config", {}).get("feed_urls", [])
     if not feed_urls:
         return []
 
-    items: List[Dict] = []
+    items: list[dict] = []
     for feed_url in feed_urls:
         try:
             feed = feedparser.parse(feed_url)
@@ -246,12 +248,12 @@ def _discover_rss(source: Dict) -> List[Dict]:
     return items
 
 
-def _discover_remoteok(source: Dict) -> List[Dict]:
+def _discover_remoteok(source: dict) -> list[dict]:
     """RemoteOK API — free JSON feed, no auth, attribution required.
 
     https://remoteok.com/api
     """
-    results: List[Dict] = []
+    results: list[dict] = []
     headers = {
         "User-Agent": settings.user_agent,
         "Accept": "application/json",
@@ -296,12 +298,12 @@ def _discover_remoteok(source: Dict) -> List[Dict]:
     return results
 
 
-def _discover_himalayas(source: Dict) -> List[Dict]:
+def _discover_himalayas(source: dict) -> list[dict]:
     """Himalayas API — remote+on-site jobs, no auth.
 
     https://himalayas.app/jobs/rss  (API docs: https://himalayas.app/api)
     """
-    results: List[Dict] = []
+    results: list[dict] = []
     headers = {"User-Agent": settings.user_agent}
     queries = source.get("config", {}).get("queries", [])
     keywords = [q.get("search_term", "").lower() for q in queries if q.get("search_term")]
@@ -342,7 +344,7 @@ def _discover_himalayas(source: Dict) -> List[Dict]:
     return results
 
 
-def _discover_adzuna(source: Dict) -> List[Dict]:
+def _discover_adzuna(source: dict) -> list[dict]:
     """Adzuna Job Board API — free tier 250 req/day, global coverage.
 
     Requires ADZUNA_APP_ID and ADZUNA_APP_KEY in config (.env).
@@ -364,7 +366,7 @@ def _discover_adzuna(source: Dict) -> List[Dict]:
     }
     country_code = country_map.get(country.lower(), "in")
 
-    results: List[Dict] = []
+    results: list[dict] = []
     results_wanted = source.get("config", {}).get("results_wanted", 20)
     headers = {"User-Agent": settings.user_agent}
 
@@ -399,7 +401,6 @@ def _discover_adzuna(source: Dict) -> List[Dict]:
                             loc_parts.append(str(v))
                 location_str = ", ".join(dict.fromkeys(loc_parts)) or location
 
-                sal = job.get("salary_min") or job.get("salary_max") or 0
                 results.append({
                     "source_job_id": str(job.get("id") or job.get("redirect_url", "")),
                     "title": _clean_text(job.get("title") or ""),
@@ -420,7 +421,7 @@ def _discover_adzuna(source: Dict) -> List[Dict]:
     return results
 
 
-def _discover_remotive(source: Dict) -> List[Dict]:
+def _discover_remotive(source: dict) -> list[dict]:
     """Remotive Remote Jobs API — free, no auth, requires attribution.
 
     https://remotive.com/remote-jobs/api
@@ -432,7 +433,7 @@ def _discover_remotive(source: Dict) -> List[Dict]:
             return _discover_remotive_feed(feed_urls, source)
         return []
 
-    results: List[Dict] = []
+    results: list[dict] = []
     base_url = "https://api.remotive.com/v1/jobs"
     headers = {"User-Agent": settings.user_agent}
 
@@ -470,9 +471,9 @@ def _discover_remotive(source: Dict) -> List[Dict]:
     return results
 
 
-def _discover_remotive_feed(feed_urls: List[str], source: Dict) -> List[Dict]:
+def _discover_remotive_feed(feed_urls: list[str], source: dict) -> list[dict]:
     """Fallback: parse Remotive RSS feeds."""
-    items: List[Dict] = []
+    items: list[dict] = []
     headers = {"User-Agent": settings.user_agent}
     for feed_url in feed_urls:
         try:
@@ -504,7 +505,7 @@ def _discover_remotive_feed(feed_urls: List[str], source: Dict) -> List[Dict]:
     return items
 
 
-def _discover_jsearch(source: Dict) -> List[Dict]:
+def _discover_jsearch(source: dict) -> list[dict]:
     """JSearch (SerpApi/RapidAPI) — job search aggregation API.
 
     Free tier: 50 requests/month on RapidAPI. Requires JSEARCH_API_KEY.
@@ -517,7 +518,7 @@ def _discover_jsearch(source: Dict) -> List[Dict]:
     if not queries:
         return []
 
-    results: List[Dict] = []
+    results: list[dict] = []
     headers = {
         "X-RapidAPI-Key": settings.jsearch_api_key,
         "X-RapidAPI-Host": "jsearch.p.rapidapi.com",
@@ -565,7 +566,7 @@ def _discover_jsearch(source: Dict) -> List[Dict]:
     return results
 
 
-def _discover_usajobs(source: Dict) -> List[Dict]:
+def _discover_usajobs(source: dict) -> list[dict]:
     """USAJOBS API — US federal jobs, no auth required (API key recommended).
 
     https://www.usajobs.gov/Developer/api/docs/
@@ -574,7 +575,7 @@ def _discover_usajobs(source: Dict) -> List[Dict]:
     if not queries:
         return []
 
-    results: List[Dict] = []
+    results: list[dict] = []
     headers = {
         "User-Agent": settings.user_agent,
         "Authorization-Type": "google",
@@ -627,12 +628,12 @@ def _discover_usajobs(source: Dict) -> List[Dict]:
     return results
 
 
-def _discover_remotive_feed_old(source: Dict) -> List[Dict]:
+def _discover_remotive_feed_old(source: dict) -> list[dict]:
     """Parse general RSS/Atom feeds (fallback)."""
     return _discover_rss(source)
 
 
-def _discover_jobscraper(source: Dict) -> List[Dict]:
+def _discover_jobscraper(source: dict) -> list[dict]:
     """python-job-scraper alternative for Indian platforms: Internshala, Shine, Apna, Naukri, Foundit.
 
     Uses its own scrape_jobs API. Optional lightweight extension of JobSpy.
@@ -703,7 +704,7 @@ def _is_remote(location: str, title: str = "") -> bool:
     return any(token in text for token in ["remote", "anywhere", "wfh", "work from home", "distributed"])
 
 
-def _safe_parse_date(value: Any) -> Optional[str]:
+def _safe_parse_date(value: Any) -> str | None:
     if not value:
         return None
     if isinstance(value, str):
@@ -716,7 +717,7 @@ def _safe_parse_date(value: Any) -> Optional[str]:
 
 # --------------- core discovery ---------------
 
-def run_source(source: Dict) -> Dict:
+def run_source(source: dict) -> dict:
     """Execute one source and return stats. Each call creates its own DB session."""
     source_id = source.get("id") or source.get("company", "unknown").lower().replace(" ", "-").replace("/", "-")[:50]
     source_name = source.get("source_name", source.get("company", "unknown"))
@@ -898,7 +899,7 @@ def run_source(source: Dict) -> Dict:
         db.close()
 
 
-def discover(sources: List[Dict], max_workers: int = 4) -> Dict:
+def discover(sources: list[dict], max_workers: int = 4) -> dict:
     """Run multiple sources in parallel with deduplication."""
     results = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:

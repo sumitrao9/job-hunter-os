@@ -1,8 +1,10 @@
+from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
+
 from app.database import get_db
-from app.models import Job, Application
-from datetime import datetime, timedelta
+from app.models import Application, Job
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 

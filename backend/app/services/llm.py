@@ -8,7 +8,7 @@ Falls back to direct Ollama HTTP calls when litellm is unavailable.
 """
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ class LLMService:
             import litellm
             litellm.set_verbose(False)
 
-            response = litellm.completion(
+            litellm.completion(
                 model=model,
                 messages=[{"role": "user", "content": "Hi"}],
                 max_tokens=1,
@@ -90,7 +90,7 @@ class LLMService:
         except Exception as exc:
             return {"ok": False, "provider": "none", "error": str(exc)}
 
-    def list_providers(self) -> List[str]:
+    def list_providers(self) -> list[str]:
         """List configured LLM providers."""
         providers = []
         if settings.openai_api_key:
@@ -101,7 +101,7 @@ class LLMService:
             providers.append("ollama")
         return providers or ["ollama"]
 
-    def list_models(self) -> Dict[str, List[str]]:
+    def list_models(self) -> dict[str, list[str]]:
         """List models available per provider."""
         result = {}
         for provider in self.list_providers():
@@ -116,10 +116,10 @@ class LLMService:
     def generate(
         self,
         prompt: str,
-        model: Optional[str] = None,
+        model: str | None = None,
         temperature: float = 0.2,
         max_tokens: int = 4000,
-        schema: Optional[dict] = None,
+        schema: dict | None = None,
     ) -> str:
         """Generate text using the configured LLM provider."""
         model = model or self._resolve_model()
@@ -164,7 +164,7 @@ class LLMService:
         self,
         prompt: str,
         schema: dict,
-        model: Optional[str] = None,
+        model: str | None = None,
         temperature: float = 0.2,
         max_tokens: int = 4000,
     ) -> Any:
@@ -182,8 +182,8 @@ class LLMService:
 
     def chat(
         self,
-        messages: List[Dict[str, str]],
-        model: Optional[str] = None,
+        messages: list[dict[str, str]],
+        model: str | None = None,
         temperature: float = 0.2,
         max_tokens: int = 4000,
     ) -> str:

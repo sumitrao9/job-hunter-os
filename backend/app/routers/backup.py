@@ -1,10 +1,10 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import Optional
 import os
 import shutil
 import zipfile
 from datetime import datetime
+
+from fastapi import APIRouter, HTTPException
+
 from app.config import settings
 
 router = APIRouter(prefix="/api/backup", tags=["backup"])
@@ -39,7 +39,7 @@ def backup_status():
 
 
 @router.post("/create")
-def create_backup(label: Optional[str] = None):
+def create_backup(label: str | None = None):
     """Create a backup of the database and uploads."""
     backup_dir = os.path.join(settings.data_dir, "backups")
     os.makedirs(backup_dir, exist_ok=True)

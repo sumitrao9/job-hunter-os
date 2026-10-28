@@ -1,24 +1,25 @@
+from __future__ import annotations
+
+import logging
+import uuid
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
+
 from app.database import get_db
 from app.models import (
-    Profile,
-    Application,
-    AutoApplySettings,
     ApplicationAttempt,
     ApprovalRecord,
-    Job,
-    Resume,
+    AutoApplySettings,
+    Profile,
 )
-import uuid
-import logging
-from datetime import datetime
 from app.services.auto_apply_workflow import (
-    run_auto_apply_pipeline,
     get_pending_approvals,
-    process_approval,
     get_stats,
+    process_approval,
+    run_auto_apply_pipeline,
 )
 
 logger = logging.getLogger(__name__)
@@ -223,7 +224,7 @@ def submit_application(approval_id: str, payload: SubmitRequest, db: Session = D
 
     # Mark as approved, then trigger actual submission
     from app.services.auto_apply_workflow import process_approval
-    result = process_approval(db, approval_id, "approved", f"Manual submit{f' (dry-run)' if payload.dry_run else ''}")
+    result = process_approval(db, approval_id, "approved", f"Manual submit{' (dry-run)' if payload.dry_run else ''}")
     if result.get("status") != "ok":
         raise HTTPException(status_code=500, detail=result.get("message", "Submission failed"))
 

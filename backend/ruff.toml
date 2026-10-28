@@ -1,0 +1,21 @@
+line-length = 100
+target-version = "py310"
+
+[lint]
+# Focus on real defects: undefined names, unused imports, syntax errors, import
+# ordering. Style/formatting rules are intentionally relaxed for this codebase,
+# which is dominated by idiomatic FastAPI, SQLAlchemy, and web-scraping patterns.
+select = ["E", "F", "I", "W"]
+ignore = [
+    "E402",  # lazy imports after env setup are idiomatic in startup code
+    "E501",  # line length is a non-issue in scraper/data code
+    "E712",  # `== True` in SQLAlchemy filters is idiomatic
+    "E722",  # bare except in retry loops is intentional
+    "E741",  # short loop var names like `l` are fine in scrapers
+    "W292",  # some scripts intentionally omit trailing newline
+    "F401",  # re-exported names and optional-import probes
+]
+
+[lint.per-file-ignores]
+"tests/*" = ["S101"]  # assert is fine in tests
+"*/migrations/*" = ["E501"]  # auto-generated

@@ -1,36 +1,32 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, File, UploadFile, Form
-from sqlalchemy.orm import Session
-from typing import Optional, List
-from app.database import get_db
-from app.models import Profile, Resume, Job, Application, AgentLog, WorkflowConfig
+
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, ConfigDict
-from datetime import datetime
-import json
-import os
-import uuid
-from app.config import settings
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.models import Profile
 
 router = APIRouter(prefix="/api/profile", tags=["profile"])
 
 
 class ProfileSchema(BaseModel):
-    full_name: Optional[str] = None
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    location: Optional[str] = None
-    preferred_locations: Optional[List[str]] = None
-    education: Optional[List[dict]] = None
-    experience: Optional[List[dict]] = None
-    skills: Optional[List[str]] = None
-    desired_roles: Optional[List[str]] = None
-    min_salary: Optional[int] = None
-    preferred_salary: Optional[int] = None
-    remote_preference: Optional[str] = None
-    experience_level: Optional[str] = None
-    notice_period: Optional[str] = None
-    preferred_industries: Optional[List[str]] = None
-    search_keywords: Optional[List[str]] = None
-    search_exclusions: Optional[List[str]] = None
+    full_name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    location: str | None = None
+    preferred_locations: list[str] | None = None
+    education: list[dict] | None = None
+    experience: list[dict] | None = None
+    skills: list[str] | None = None
+    desired_roles: list[str] | None = None
+    min_salary: int | None = None
+    preferred_salary: int | None = None
+    remote_preference: str | None = None
+    experience_level: str | None = None
+    notice_period: str | None = None
+    preferred_industries: list[str] | None = None
+    search_keywords: list[str] | None = None
+    search_exclusions: list[str] | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

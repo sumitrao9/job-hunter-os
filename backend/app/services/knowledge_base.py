@@ -5,13 +5,18 @@ entries are parsed and categorized, then TF-IDF ranks entries by relevance to
 each job description. Relevant entries are injected into AI prompts for
 tailored resume/cover letter generation.
 """
+from __future__ import annotations
+
 import os
 import re
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
-from app.services.resume_parser import parse_resume_file
 from app.config import settings
+from app.services.resume_parser import parse_resume_file
+
+if TYPE_CHECKING:
+    from sklearn.feature_extraction.text import TfidfVectorizer
 
 SECTION_MARKERS = {
     "experience": ["experience", "work experience", "employment", "career"],
@@ -26,27 +31,27 @@ SECTION_MARKERS = {
 @dataclass
 class KBCategory:
     name: str
-    entries: List[str] = field(default_factory=list)
-    tfidf_scores: List[float] = field(default_factory=list)
+    entries: list[str] = field(default_factory=list)
+    tfidf_scores: list[float] = field(default_factory=list)
 
 
 @dataclass
 class KBDocument:
     id: str
     filename: str
-    categories: Dict[str, KBCategory] = field(default_factory=dict)
+    categories: dict[str, KBCategory] = field(default_factory=dict)
     raw_text: str = ""
 
 
 class KnowledgeBase:
     """Manages career knowledge entries with TF-IDF relevance scoring."""
 
-    def __init__(self, storage_dir: Optional[str] = None):
+    def __init__(self, storage_dir: str | None = None):
         self.storage_dir = storage_dir or os.path.join(settings.upload_dir, "knowledge_base")
         os.makedirs(self.storage_dir, exist_ok=True)
-        self._tfidf_vectorizer: Optional["TfidfVectorizer"] = None
+        self._tfidf_vectorizer: TfidfVectorizer | None = None
 
-    def add_document(self, file_path: str, doc_id: Optional[str] = None) -> str:
+    def add_document(self, file_path: str, doc_id: str | None = None) -> str:
         """Add a career document to the knowledge base."""
         import uuid
 
@@ -77,12 +82,12 @@ class KnowledgeBase:
 
         return doc_id
 
-    def _chunk_by_sections(self, text: str) -> Dict[str, KBCategory]:
+    def _chunk_by_sections(self, text: str) -> dict[str, KBCategory]:
         """Split text into categories based on section header markers."""
-        categories: Dict[str, KBCategory] = {}
+        categories: dict[str, KBCategory] = {}
         lines = text.split("\n")
         current_category = "general"
-        current_lines: List[str] = []
+        current_lines: list[str] = []
 
         for line in lines:
             line_lower = line.strip().lower()
@@ -107,7 +112,7 @@ class KnowledgeBase:
 
         return categories
 
-    def list_documents(self) -> List[Dict[str, Any]]:
+    def list_documents(self) -> list[dict[str, Any]]:
         """List all documents in the knowledge base."""
         docs = []
         for filename in os.listdir(self.storage_dir):
@@ -135,7 +140,7 @@ class KnowledgeBase:
         job_description: str,
         category: str = "experience",
         top_n: int = 10,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Score knowledge base entries against a job using TF-IDF cosine similarity.
 
         Returns the top_n most relevant entries from all documents,
@@ -149,13 +154,13 @@ class KnowledgeBase:
             return self._fallback_scoring(job_title, job_description, category, top_n)
 
         # Gather all entries across all documents in the storage dir.
-        entries: List[str] = []
-        sources: List[str] = []
+        entries: list[str] = []
+        sources: list[str] = []
 
         for doc_file in os.listdir(self.storage_dir):
             if doc_file.endswith(".txt"):
                 doc_path = os.path.join(self.storage_dir, doc_file)
-                with open(doc_path, "r", encoding="utf-8") as f:
+                with open(doc_path, encoding="utf-8") as f:
                     text = f.read()
                 # Simple chunking by paragraphs.
                 paragraphs = [p.strip() for p in re.split(r"\n\s*\n", text) if len(p.strip()) > 20]
@@ -196,17 +201,17 @@ class KnowledgeBase:
 
     def _fallback_scoring(
         self, job_title: str, job_description: str, category: str, top_n: int
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Simple keyword-based fallback when sklearn is unavailable."""
         job_text = f"{job_title} {job_description}".lower()
         job_tokens = set(re.split(r"\W+", job_text)) - {""}
 
-        results: List[Dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
         for doc_file in os.listdir(self.storage_dir):
             if not doc_file.endswith(".txt"):
                 continue
             doc_path = os.path.join(self.storage_dir, doc_file)
-            with open(doc_path, "r", encoding="utf-8") as f:
+            with open(doc_path, encoding="utf-8") as f:
                 text = f.read()
             paragraphs = [p.strip() for p in re.split(r"\n\s*\n", text) if len(p.strip()) > 20]
             for para in paragraphs:

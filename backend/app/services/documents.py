@@ -1,12 +1,10 @@
 import os
 import uuid
-from datetime import datetime
-from io import BytesIO
 from typing import Any
 
 from docx import Document
-from docx.shared import Pt, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+
 from app.config import settings
 
 

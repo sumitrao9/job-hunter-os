@@ -8,13 +8,13 @@ Usage:
     python start.py              # Start backend server
     python start.py --frontend   # Also start frontend dev server
 """
+import logging
 import os
-import sys
+import signal
 import subprocess
+import sys
 import time
 import webbrowser
-import signal
-import logging
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
@@ -41,8 +41,7 @@ def check_python_deps():
 
 def check_database():
     """Ensure database tables exist."""
-    from app.database import engine, Base
-    from app.models import Profile, Job, Application
+    from app.database import Base, engine
     try:
         Base.metadata.create_all(bind=engine)
         return True
@@ -107,7 +106,6 @@ def wait_for_backend(url="http://127.0.0.1:8000", timeout=30):
 
 def main():
     port = 8000
-    run_frontend = "--frontend" in sys.argv
 
     logger.info("=" * 50)
     logger.info("    JOB HUNTER OS — Starting Up")
@@ -149,7 +147,7 @@ def main():
     if wait_for_backend(f"http://127.0.0.1:{port}"):
         logger.info("  ✓ Backend is running")
         logger.info(f"\nNS is ready at:\n  http://localhost:{port}")
-        logger.info(f"\nOpen this URL in your browser.")
+        logger.info("\nOpen this URL in your browser.")
         try:
             webbrowser.open(f"http://localhost:{port}")
         except Exception:

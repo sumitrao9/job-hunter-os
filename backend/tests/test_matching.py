@@ -6,14 +6,13 @@ salary boundaries.
 """
 import pytest
 
+from app.services.application_prep import prepare_application, relevant_skills
 from app.services.matching import (
-    MatchResult,
     framework_conflict,
     matched_skills,
     score_job_against_profile,
     tokenize,
 )
-from app.services.application_prep import prepare_application, relevant_skills
 
 
 class FakeProfile:
@@ -27,11 +26,11 @@ class FakeProfile:
         self.remote_preference = kw.get("remote_preference", "remote")
         self.experience_level = kw.get("experience_level", "mid")
         self.notice_period = kw.get("notice_period", "2 weeks")
-        self.min_salary = kw.get("min_salary", None)
-        self.preferred_locations = kw.get("preferred_locations", None)
-        self.search_exclusions = kw.get("search_exclusions", None)
+        self.min_salary = kw.get("min_salary")
+        self.preferred_locations = kw.get("preferred_locations")
+        self.search_exclusions = kw.get("search_exclusions")
         self.experience = kw.get("experience", [])
-        self.description = kw.get("description", None)
+        self.description = kw.get("description")
 
 
 class FakeJob:
@@ -42,8 +41,8 @@ class FakeJob:
         self.remote = kw.get("remote", True)
         self.description = kw.get("description", "")
         self.url = kw.get("url", "https://example.com/job")
-        self.salary_min = kw.get("salary_min", None)
-        self.salary_max = kw.get("salary_max", None)
+        self.salary_min = kw.get("salary_min")
+        self.salary_max = kw.get("salary_max")
 
 
 # --- tokenize ------------------------------------------------------------

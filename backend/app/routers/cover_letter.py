@@ -1,13 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from app.database import get_db
-from app.models import Profile, Job, Application
-from app.services.knowledge_base import KnowledgeBase
-from app.services.matching import score_job_against_profile
-from app.services.application_prep import prepare_application
-from pydantic import BaseModel
-from typing import Optional
 import os
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.models import Application, Job, Profile
+from app.services.application_prep import prepare_application
+from app.services.knowledge_base import KnowledgeBase
 
 router = APIRouter(prefix="/api/cover-letter", tags=["cover-letter"])
 
@@ -15,8 +15,8 @@ kb = KnowledgeBase()
 
 
 class CoverLetterRequest(BaseModel):
-    job_id: Optional[str] = None
-    application_id: Optional[str] = None
+    job_id: str | None = None
+    application_id: str | None = None
 
 
 @router.post("/generate")
@@ -70,7 +70,7 @@ class KnowledgeBaseUploadResponse(BaseModel):
 
 
 @router.post("/knowledge-base/upload")
-def upload_to_kb(file_path: str, doc_id: Optional[str] = None):
+def upload_to_kb(file_path: str, doc_id: str | None = None):
     """Add a career document to the knowledge base (optional, no AI required)."""
     if not file_path or not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")

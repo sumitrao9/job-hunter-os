@@ -1,43 +1,44 @@
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.orm import Session
-from typing import Optional, List
-from app.database import get_db
-from app.models import Application, Job, Resume
-from pydantic import BaseModel, ConfigDict
-from datetime import datetime
 import uuid
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, ConfigDict
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.models import Application
 
 router = APIRouter(prefix="/api/applications", tags=["applications"])
 
 
 class ApplicationSchema(BaseModel):
-    id: Optional[str] = None
-    job_id: Optional[str] = None
-    resume_id: Optional[str] = None
-    company: Optional[str] = None
-    job_title: Optional[str] = None
-    job_url: Optional[str] = None
-    source: Optional[str] = None
-    match_score: Optional[float] = None
-    status: Optional[str] = None
-    cover_letter: Optional[str] = None
-    form_answers: Optional[dict] = None
-    notes: Optional[str] = None
-    date_discovered: Optional[datetime] = None
-    date_applied: Optional[datetime] = None
-    follow_up_date: Optional[datetime] = None
-    history: Optional[list] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    id: str | None = None
+    job_id: str | None = None
+    resume_id: str | None = None
+    company: str | None = None
+    job_title: str | None = None
+    job_url: str | None = None
+    source: str | None = None
+    match_score: float | None = None
+    status: str | None = None
+    cover_letter: str | None = None
+    form_answers: dict | None = None
+    notes: str | None = None
+    date_discovered: datetime | None = None
+    date_applied: datetime | None = None
+    follow_up_date: datetime | None = None
+    history: list | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
-@router.get("/", response_model=List[ApplicationSchema])
+@router.get("/", response_model=list[ApplicationSchema])
 def list_applications(
     db: Session = Depends(get_db),
-    status: Optional[str] = Query(None),
-    q: Optional[str] = Query(None),
+    status: str | None = Query(None),
+    q: str | None = Query(None),
     skip: int = 0,
     limit: int = 100,
 ):

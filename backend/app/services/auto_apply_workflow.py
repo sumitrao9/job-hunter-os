@@ -11,35 +11,38 @@ In "autonomous" mode the workflow can also drive Playwright-based submission
 on supported ATS platforms, but this is OFF by default and requires explicit
 user opt-in with the emergency_stop reset.
 """
+import asyncio
+import json
 import logging
+import os
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.models import (
-    Job,
-    Profile,
     Application,
     ApplicationAttempt,
     ApprovalRecord,
     AutoApplySettings,
+    Job,
     JobSource,
+    Profile,
     Resume,
 )
-from app.services.multi_discovery import discover
-from app.services.matching import score_job_against_profile
 from app.services.application_prep import prepare_application
+from app.services.matching import score_job_against_profile
+from app.services.multi_discovery import discover
 
 logger = logging.getLogger(__name__)
 
 
-def _get_settings(db: Session) -> Optional[AutoApplySettings]:
+def _get_settings(db: Session) -> AutoApplySettings | None:
     return db.query(AutoApplySettings).first()
 
 
-def _get_enabled_sources(db: Session) -> List[Dict]:
+def _get_enabled_sources(db: Session) -> list[dict]:
     sources = db.query(JobSource).filter(JobSource.enabled == True).all()
     return [
         {
@@ -54,7 +57,7 @@ def _get_enabled_sources(db: Session) -> List[Dict]:
     ]
 
 
-def _filter_jobs(jobs: List[Job], profile: Profile, settings: AutoApplySettings) -> List[Job]:
+def _filter_jobs(jobs: list[Job], profile: Profile, settings: AutoApplySettings) -> list[Job]:
     """Apply user-configured filters before preparing applications."""
     filtered = []
     keywords_include = (profile.search_keywords or []) if hasattr(profile, "search_keywords") else []
@@ -99,7 +102,7 @@ def _filter_jobs(jobs: List[Job], profile: Profile, settings: AutoApplySettings)
     return filtered
 
 
-def run_discovery_step(db: Session, settings: AutoApplySettings) -> Dict:
+def run_discovery_step(db: Session, settings: AutoApplySettings) -> dict:
     """Run job discovery from all enabled sources."""
     sources = _get_enabled_sources(db)
     if not sources:
@@ -119,7 +122,7 @@ def run_discovery_step(db: Session, settings: AutoApplySettings) -> Dict:
     return result
 
 
-def run_matching_step(db: Session, profile: Profile, settings: AutoApplySettings, limit: int = 20) -> List[Job]:
+def run_matching_step(db: Session, profile: Profile, settings: AutoApplySettings, limit: int = 20) -> list[Job]:
     """Fetch recently-discovered jobs and score them against the profile.
 
     Only jobs that haven't been scored yet are processed.
@@ -150,7 +153,7 @@ def run_matching_step(db: Session, profile: Profile, settings: AutoApplySettings
     return scored
 
 
-def run_preparation_step(db: Session, jobs: List[Job], profile: Profile, settings: AutoApplySettings) -> List[Application]:
+def run_preparation_step(db: Session, jobs: list[Job], profile: Profile, settings: AutoApplySettings) -> list[Application]:
     """Prepare application packages and queue them for approval."""
     # Check daily limit
     today = datetime.utcnow().date()
@@ -159,7 +162,7 @@ def run_preparation_step(db: Session, jobs: List[Job], profile: Profile, setting
     remaining = max(0, settings.max_per_day - today_applications)
 
     jobs_to_process = jobs[:remaining] if remaining else []
-    prepared_applications: List[Application] = []
+    prepared_applications: list[Application] = []
 
     for job in jobs_to_process:
         try:
@@ -211,7 +214,7 @@ def run_preparation_step(db: Session, jobs: List[Job], profile: Profile, setting
     return prepared_applications
 
 
-def run_auto_apply_pipeline(db: Session, limit: int = 20) -> Dict:
+def run_auto_apply_pipeline(db: Session, limit: int = 20) -> dict:
     """Execute the full auto-apply pipeline: discover -> match -> prepare -> approve.
 
     Returns a summary dict with per-stage counts.
@@ -237,7 +240,7 @@ def run_auto_apply_pipeline(db: Session, limit: int = 20) -> Dict:
     db.commit()
     db.refresh(attempt)
 
-    summary: Dict = {"attempt_id": attempt.id, "stages": {}}
+    summary: dict = {"attempt_id": attempt.id, "stages": {}}
 
     try:
         # Stage 1: Discovery
@@ -279,7 +282,7 @@ def run_auto_apply_pipeline(db: Session, limit: int = 20) -> Dict:
     return summary
 
 
-def get_pending_approvals(db: Session, limit: int = 50) -> List[Dict]:
+def get_pending_approvals(db: Session, limit: int = 50) -> list[dict]:
     """Return pending approval records with full application context."""
     approvals = (
         db.query(ApprovalRecord)
@@ -291,7 +294,6 @@ def get_pending_approvals(db: Session, limit: int = 50) -> List[Dict]:
     result = []
     for a in approvals:
         app = a.application
-        job = app.job if app.job_id else None
         result.append({
             "approval_id": a.id,
             "application_id": a.application_id,
@@ -307,7 +309,7 @@ def get_pending_approvals(db: Session, limit: int = 50) -> List[Dict]:
     return result
 
 
-def process_approval(db: Session, approval_id: str, decision: str, notes: Optional[str] = None) -> Dict:
+def process_approval(db: Session, approval_id: str, decision: str, notes: str | None = None) -> dict:
     """Process an approval decision.
 
     If 'approved', attempts Playwright submission via application_submission.
@@ -349,9 +351,8 @@ def process_approval(db: Session, approval_id: str, decision: str, notes: Option
     }
 
 
-def _try_submit_application(db: Session, application: Application, settings_row) -> Dict:
+def _try_submit_application(db: Session, application: Application, settings_row) -> dict:
     """Attempt Playwright submission; returns immediately if Playwright unavailable."""
-    import json as _json
 
     profile = db.query(Profile).first()
     if not profile:
@@ -405,7 +406,7 @@ def _try_submit_application(db: Session, application: Application, settings_row)
     return result
 
 
-def get_stats(db: Session) -> Dict:
+def get_stats(db: Session) -> dict:
     settings_row = _get_settings(db)
     pending_approvals = db.query(ApprovalRecord).filter(ApprovalRecord.decision == "pending").count()
     active_attempts = db.query(ApplicationAttempt).filter(ApplicationAttempt.status == "in_progress").count()

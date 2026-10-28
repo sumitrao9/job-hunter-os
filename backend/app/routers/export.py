@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from app.database import get_db
-from app.models import Job, Application
 import csv
 import io
-import json
+
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.models import Application, Job
 
 router = APIRouter(prefix="/api/export", tags=["export"])
 

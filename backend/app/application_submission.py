@@ -6,13 +6,8 @@ torontodeveloper/job-application-agent): Bezier-curve mouse paths,
 ATS-specific selectors, and human-in-the-loop confirmation.
 """
 import asyncio
-import json
 import random
-import time
 from pathlib import Path
-from typing import Optional
-
-import math
 
 
 def _bezier_curve(x0, y0, x1, y1, cpx, cpy, steps=12):
@@ -106,11 +101,11 @@ class ApplicationSubmitter:
         """Initialize Playwright browser with stealth settings."""
         try:
             from playwright.async_api import async_playwright
-        except ImportError:
+        except ImportError as err:
             raise RuntimeError(
                 "Playwright is required for autonomous submission. "
                 "Install with: pip install playwright && playwright install"
-            )
+            ) from err
 
         self.playwright = await async_playwright().start()
         self.browser = await self.playwright.chromium.launch(
@@ -133,7 +128,7 @@ class ApplicationSubmitter:
         self,
         job_url: str,
         profile_data: dict,
-        resume_path: Optional[str] = None,
+        resume_path: str | None = None,
         dry_run: bool = False,
     ) -> dict:
         """Submit an application to a job posting.
@@ -231,7 +226,6 @@ class ApplicationSubmitter:
     async def _fill_form(self, ats: str, profile: dict) -> int:
         """Fill form fields using platform-specific selectors."""
         filled = 0
-        selectors = self.ATS_SELECTORS.get(ats, {})
 
         # Build field mapping: field_name -> (selector, value)
         field_map = {}
@@ -265,7 +259,7 @@ class ApplicationSubmitter:
                     await el.scroll_into_view_if_needed()
                     await self._human_type(el, str(value))
                     filled += 1
-            except:
+            except Exception:
                 pass
 
         # Also fill any remaining text inputs using AI-like label matching
@@ -316,7 +310,7 @@ class ApplicationSubmitter:
                                 await el.scroll_into_view_if_needed()
                                 await self._human_type(el, str(value))
                                 filled += 1
-                        except:
+                        except Exception:
                             pass
         return filled
 
@@ -392,10 +386,9 @@ class ApplicationSubmitter:
                             clicks=True,
                         )
                         return True
-                    else:
-                        await btn.click(force=True)
-                        return True
-            except:
+                    await btn.click(force=True)
+                    return True
+            except Exception:
                 continue
         return False
 
@@ -420,7 +413,7 @@ class ApplicationSubmitter:
                     result["message"] = "Application submitted successfully! Confirmation page detected."
                     result["confirmation"] = True
                     return result
-            except:
+            except Exception:
                 pass
 
         # No confirmation page, but submit was clicked
@@ -442,7 +435,7 @@ class ApplicationSubmitter:
 async def submit_job_application(
     job_url: str,
     profile_data: dict,
-    resume_path: Optional[str] = None,
+    resume_path: str | None = None,
     headless: bool = True,
     dry_run: bool = False,
 ) -> dict:

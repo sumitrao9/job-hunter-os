@@ -28,7 +28,7 @@ def parse_resume_file(path: str) -> dict[str, Any]:
     elif ext == ".docx":
         text = _extract_text_from_docx(path)
     elif ext == ".txt":
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             text = f.read()
     else:
         raise ValueError(f"Unsupported file type: {ext}")

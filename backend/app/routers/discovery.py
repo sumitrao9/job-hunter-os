@@ -1,4 +1,3 @@
-from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -12,7 +11,7 @@ router = APIRouter(prefix="/api/discovery", tags=["discovery"])
 
 # Public boards that do not require a login. These are standard public ATS
 # endpoints plus JobSpy-supported boards. No custom scraping.
-DEFAULT_SOURCES: List[dict] = [
+DEFAULT_SOURCES: list[dict] = [
     # === Greenhouse (public API) ===
     {"kind": "greenhouse", "company": "GitLab", "url": "https://boards-api.greenhouse.io/v1/boards/gitlab/jobs"},
     {"kind": "greenhouse", "company": "Stripe", "url": "https://boards-api.greenhouse.io/v1/boards/stripe/jobs"},
@@ -91,18 +90,18 @@ DEFAULT_SOURCES: List[dict] = [
 class SourceConfig(BaseModel):
     kind: str
     url: str
-    company: Optional[str] = None
-    name: Optional[str] = None
-    item_key: Optional[str] = ""
+    company: str | None = None
+    name: str | None = None
+    item_key: str | None = ""
 
 
 class DiscoveryRequest(BaseModel):
-    sources: Optional[List[SourceConfig]] = None
+    sources: list[SourceConfig] | None = None
     score: bool = True
 
 
 class BulkScoreRequest(BaseModel):
-    job_ids: Optional[List[str]] = None
+    job_ids: list[str] | None = None
     unscored_only: bool = False
     limit: int = 100
 
@@ -116,7 +115,7 @@ def get_default_sources():
 def run_discovery_endpoint(request: DiscoveryRequest, db: Session = Depends(get_db)):
     """Fetch jobs using JobSpy for job boards and public ATS APIs."""
     from app.services.multi_discovery import discover
-    
+
     sources = (
         [s.model_dump(exclude_none=True) for s in request.sources]
         if request.sources

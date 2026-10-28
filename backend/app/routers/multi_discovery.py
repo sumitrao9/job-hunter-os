@@ -1,11 +1,11 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import JobSource, SourceRun, SchedulerConfig, SearchProfile
+from app.models import JobSource, SchedulerConfig, SearchProfile, SourceRun
 from app.services.multi_discovery import discover
 
 router = APIRouter(prefix="/api/discovery/v2", tags=["discovery-v2"])
@@ -16,35 +16,35 @@ router = APIRouter(prefix="/api/discovery/v2", tags=["discovery-v2"])
 class SourceCreate(BaseModel):
     source_name: str
     country: str = "India"
-    region: Optional[str] = None
-    category: Optional[str] = None
+    region: str | None = None
+    category: str | None = None
     source_type: str = "ATS"
     adapter: str = "greenhouse"
-    base_url: Optional[str] = None
+    base_url: str | None = None
     enabled: bool = True
     priority: int = 50
     schedule: str = "1h"
     rate_limit: int = 10
     requires_auth: bool = False
     requires_proxy: bool = False
-    config: Optional[Dict[str, Any]] = None
+    config: dict[str, Any] | None = None
 
 
 class SourceUpdate(BaseModel):
-    enabled: Optional[bool] = None
-    priority: Optional[int] = None
-    schedule: Optional[str] = None
-    rate_limit: Optional[int] = None
-    config: Optional[Dict[str, Any]] = None
-    health_status: Optional[str] = None
+    enabled: bool | None = None
+    priority: int | None = None
+    schedule: str | None = None
+    rate_limit: int | None = None
+    config: dict[str, Any] | None = None
+    health_status: str | None = None
 
 
 @router.get("/sources")
 def list_sources(
     db: Session = Depends(get_db),
-    enabled: Optional[bool] = None,
-    adapter: Optional[str] = None,
-    health: Optional[str] = None,
+    enabled: bool | None = None,
+    adapter: str | None = None,
+    health: str | None = None,
 ):
     q = db.query(JobSource)
     if enabled is not None:
@@ -171,8 +171,8 @@ def get_source_stats(db: Session = Depends(get_db)):
 # ---------- Scheduler ----------
 
 class SchedulerUpdate(BaseModel):
-    enabled: Optional[bool] = None
-    frequency_minutes: Optional[int] = None
+    enabled: bool | None = None
+    frequency_minutes: int | None = None
 
 
 @router.get("/scheduler")
@@ -215,7 +215,7 @@ def update_scheduler(payload: SchedulerUpdate, db: Session = Depends(get_db)):
 
 @router.post("/run")
 def run_discovery(
-    sources: Optional[List[Dict[str, Any]]] = Body(None),
+    sources: list[dict[str, Any]] | None = Body(None),
     score: bool = Body(False),
     db: Session = Depends(get_db),
 ):
@@ -244,11 +244,11 @@ class SearchProfileCreate(BaseModel):
     name: str
     is_default: bool = False
     enabled: bool = True
-    queries: Optional[List[Dict[str, str]]] = None
-    sources: Optional[List[str]] = None
-    keywords_include: Optional[List[str]] = None
-    keywords_exclude: Optional[List[str]] = None
-    locations: Optional[List[str]] = None
+    queries: list[dict[str, str]] | None = None
+    sources: list[str] | None = None
+    keywords_include: list[str] | None = None
+    keywords_exclude: list[str] | None = None
+    locations: list[str] | None = None
     remote_only: bool = False
 
 
