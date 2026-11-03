@@ -1,78 +1,55 @@
 # Job Hunter OS
 
-**A local-first job application tracker that runs on your machine, keeps your data on your
-machine, and never submits an application without you approving it.**
+**Local-first job application tracker. Keep your data on your machine. Never apply without your approval.**
 
 [![CI](https://github.com/sumitrao9/job-hunter-os/actions/workflows/build-windows.yml/badge.svg)](https://github.com/sumitrao9/job-hunter-os/actions/workflows/build-windows.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688)
 ![React](https://img.shields.io/badge/react-18-61dafb)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6)
+
+## Problem
+
+Job hunting is chaos — 80 tabs, scattered spreadsheets, forgotten follow-ups. Most trackers lock your resume and history behind an account and push you to auto-apply.
+
+## Solution
+
+Job Hunter OS keeps everything local. A **FastAPI** backend + **React + Vite** frontend in one place to track the entire pipeline: discover → match → tailor → apply (with approval) → follow up.
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
-## The problem
+## Features
 
-Job hunting produces a spreadsheet graveyard: 80 tabs, a Notion page, three different saved
-searches, and no idea which application you followed up on. Hosted trackers want your résumé,
-your history and your account before you can log a single application.
+| Feature | Description |
+| --- | --- |
+| **Multi-Source Discovery** | Pulls from multiple job boards, normalizes to a single schema, deduplicates automatically |
+| **Smart Matching** | Scores listings against your profile and preferences. Matching logic unit-tested independently |
+| **Resume Studio** | Parse resumes, maintain multiple tailored variants per role |
+| **Cover Letter Generator** | AI-assisted cover letters editable before use |
+| **Kanban Pipeline** | Track applications by status with notes, reminders, and follow-ups |
+| **Human-in-the-Loop** | Prepares applications for review and approval. **Nothing is submitted automatically** |
+| **Privacy-First AI** | Optional LLM support with local Ollama path — works with no API key, data stays local |
+| **Export & Reports** | Export your application data anytime |
+| **Docker Ready** | Full stack with `docker compose up` |
 
-Job Hunter OS is the opposite: a local SQLite database you own, a FastAPI backend, and a React
-UI that covers discovery → matching → resume tailoring → cover letter → application → follow-up
-in one place.
+## Screenshots
 
-| Jobs | Applications | Resume studio |
-|---|---|---|
+| Jobs Board | Applications Pipeline | Resume Studio |
+| --- | --- | --- |
 | ![Jobs](docs/screenshots/jobs.png) | ![Applications](docs/screenshots/applications.png) | ![Resumes](docs/screenshots/resumes.png) |
 
-## What it does
+## Quick Start
 
-- **Multi-source discovery** — pull listings from several job sources in one pass, normalise
-  them into a single schema, and de-duplicate against what you have already seen.
-- **Matching** — score listings against your profile and saved preferences; the matching
-  service is unit-tested independently of the API.
-- **Resume studio** — parse an existing résumé, keep multiple variants, and tailor per role.
-- **Cover letters** — generate from the job + your profile, with the text editable before use.
-- **Application pipeline** — kanban-style statuses, follow-up reminders, notes, exports.
-- **Human-in-the-loop apply** — the apply workflow prepares everything and stops for approval.
-  Nothing is submitted automatically.
-- **Optional AI** — pluggable LLM service with a local Ollama path, so the app still works with
-  no API key and no data leaving the machine.
-- **Optional n8n automation** — for scheduled discovery on your own box.
-
-## Architecture
-
-```
-┌──────────────────────────┐        ┌───────────────────────────────────────┐
-│  React + Vite frontend   │  HTTP  │  FastAPI backend                      │
-│  pages: dashboard, jobs, │ ─────► │  18 routers: jobs, applications,      │
-│  applications, resumes,  │        │  discovery, matching, resumes,        │
-│  profile, follow-ups…    │        │  cover_letter, auto_apply, export…    │
-└──────────────────────────┘        └───────────────┬───────────────────────┘
-                                                    │ services layer
-                                    ┌───────────────▼───────────────────────┐
-                                    │ matching · multi_discovery ·          │
-                                    │ resume_parser · documents · llm/ollama│
-                                    └───────────────┬───────────────────────┘
-                                                    │ SQLAlchemy
-                                    ┌───────────────▼───────────────────────┐
-                                    │ SQLite (job_hunter.db, local only)    │
-                                    └───────────────────────────────────────┘
-```
-
-## Quick start
-
-### Docker (everything, including n8n)
-
+### Docker (Recommended)
 ```bash
 docker compose up --build
 ```
+- UI: [http://localhost:5173](http://localhost:5173)
+- API: [http://localhost:8000](http://localhost:8000)
+- API Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-- UI → http://localhost:5173
-- API → http://localhost:8000
-- n8n → http://localhost:5678 (optional)
-
-### Backend only
-
+### Backend Only
 ```bash
 cd backend
 python -m venv .venv && source .venv/bin/activate
@@ -80,41 +57,35 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
 
-### Frontend only
-
+### Frontend Only
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-## Tests
+## Tech Stack
+
+**Backend:** FastAPI, SQLAlchemy, SQLite, Pydantic, Alembic  
+**Frontend:** React 18, Vite, TypeScript, TanStack Query  
+**AI/ML:** Optional LiteLLM/Ollama integration, scikit-learn for matching  
+**Infra:** Docker, pytest, GitHub Actions
+
+## Testing
 
 ```bash
-cd backend && .venv/bin/python -m pytest -q
-# 53 passed
+cd backend && python -m pytest -q
+# 53 tests passing
 ```
 
-Tests cover the API surface, matching logic and source adapters. The Windows desktop build is
-built by CI (`.github/workflows/build-windows.yml`).
+## Architecture
 
-## Design notes
-
-- **Local-first by default.** No accounts, no cloud sync, no telemetry. The database is a file
-  you can copy, back up or delete.
-- **Approval before action.** Auto-apply prepares an application and waits. This is a product
-  decision, not a missing feature.
-- **Permitted sources only.** Discovery talks to public listings and respects their terms; no
-  scraping behind a login.
-
-## Limitations
-
-- Discovery adapters break when a source changes its markup — they are plain HTTP clients, not
-  a managed scraper.
-- Matching is lexical + heuristic (TF-IDF style) with optional LLM re-ranking, not a trained
-  model.
-- The desktop packaging story is Windows-first; macOS runs from source.
+```
+Frontend (React + Vite) → FastAPI Backend → Services Layer → SQLite
+                        ↓
+                    Matching • Discovery • Resume Parser • LLM/Ollama
+```
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT License - see [LICENSE](LICENSE) for details.
