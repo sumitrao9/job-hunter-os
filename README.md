@@ -89,3 +89,11 @@ Frontend (React + Vite) → FastAPI Backend → Services Layer → SQLite
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
+
+## Support / Hosted / Hire
+- **Hosted/Pro**: need a managed 24/7 endpoint, API keys, quotas, or integration help? Open an issue: https://github.com/sumitrao9/job-hunter-os/issues
+- **Sponsor**: GitHub Sponsors (FUNDING.yml) supports maintenance.
+- **Hire/Consulting**: custom features, deployment, or automation workflows (authorized use only).
+
+*Built by [Sumit Yadav](https://github.com/sumitrao9). Authorized/ethical use only.*
+
