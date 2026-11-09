@@ -90,6 +90,9 @@ Frontend (React + Vite) → FastAPI Backend → Services Layer → SQLite
 
 MIT License - see [LICENSE](LICENSE) for details.
 
+
+> **Monetization note:** any Pro/hosted features must use authorized sources, official APIs, manual import, or explicit user consent. No unauthorized scraping/ToS violations.
+
 ## Support / Hosted / Hire
 - **Hosted/Pro**: need a managed 24/7 endpoint, API keys, quotas, or integration help? Open an issue: https://github.com/sumitrao9/job-hunter-os/issues
 - **Sponsor**: GitHub Sponsors (FUNDING.yml) supports maintenance.
