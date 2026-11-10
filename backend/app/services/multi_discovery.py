@@ -940,3 +940,24 @@ if __name__ == "__main__":
                 print(f"    queries: {s.config.get('queries', [])}")
     finally:
         db.close()
+
+
+def discover_jobs(search_term: str = "Python Developer", location: str = "Remote", sources: list = None, limit: int = 100):
+    """Convenience wrapper for job discovery."""
+    from app.database import SessionLocal
+    from app.models import JobSource
+    
+    db = SessionLocal()
+    try:
+        if sources is None:
+            sources = db.query(JobSource).filter(JobSource.enabled == True).all()
+            sources = [{"source_name": getattr(s, "source_name", getattr(s, "name", "unknown")), "adapter": s.adapter, "base_url": s.base_url, "search_url": getattr(s, "search_url", getattr(s, "base_url", None)), "enabled": s.enabled} for s in sources]
+        if not sources:
+            return []
+        result = discover(sources, max_workers=4)
+        # Return jobs from DB
+        from app.models import Job
+        jobs = db.query(Job).order_by(Job.scraped_at.desc()).limit(limit).all()
+        return [{"id": j.id, "title": j.title, "company": j.company, "location": j.location, "url": j.url, "source": j.source, "description": j.description} for j in jobs]
+    finally:
+        db.close()
